@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Venue Deletion Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .button { padding: 8px 15px; margin: 5px; border: none; border-radius: 3px; cursor: pointer; }
+        .primary { background: #007bff; color: white; }
+        .danger { background: #dc3545; color: white; }
+        .success { background: #28a745; color: white; }
+        .info { background: #17a2b8; color: white; }
+        .results { margin-top: 10px; padding: 10px; background: #f8f9fa; border-radius: 3px; }
+        .error { color: #dc3545; }
+        .success-text { color: #28a745; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Venue Deletion Test Tool</h1>
+        <p>This tool helps test the venue deletion functionality and verify that errors are properly handled.</p>
+
+        <div class="test-section">
+            <h3>🚀 Quick Tests</h3>
+            <button class="button primary" onclick="listVenues()">List All Venues</button>
+            <button class="button info" onclick="checkAuth()">Check Auth Status</button>
+            <button class="button success" onclick="testValidDeletion()">Test Valid Deletion</button>
+            <button class="button danger" onclick="testInvalidDeletion()">Test Invalid Deletion</button>
+            <div id="results-quick" class="results"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>🔧 Manual Venue Deletion Test</h3>
+            <input type="text" id="venueId" placeholder="Enter venue ID to delete" style="padding: 5px; width: 200px;">
+            <button class="button danger" onclick="deleteVenue()">Delete Venue</button>
+            <div id="results-manual" class="results"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>📊 Test Results</h3>
+            <div id="overall-results" class="results">
+                <p><strong>Test Summary:</strong></p>
+                <ul id="test-summary"></ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3001/api/v1';
+        const AUTH_API = 'http://localhost:8081/api/v1/auth';
+
+        function getAuthHeaders() {
+            const token = localStorage.getItem('ems_token');
+            return {
+                'Content-Type': 'application/json',
+                ...(token && { 'Authorization': `Bearer ${token}` })
+            };
+        }
+
+        function addTestResult(testName, success, message) {
+            const summaryList = document.getElementById('test-summary');
+            const listItem = document.createElement('li');
+            listItem.innerHTML = `<strong>${testName}:</strong> <span class="${success ? 'success-text' : 'error'}">${message}</span>`;
+            summaryList.appendChild(listItem);
+        }
+
+        async function showResults(elementId, data, isError = false) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `
+                <p><strong>${isError ? 'Error' : 'Response'}:</strong></p>
+                <pre>${JSON.stringify(data, null, 2)}</pre>
+                <p><em>Time: ${new Date().toLocaleTimeString()}</em></p>
+            `;
+        }
+
+        async function checkAuth() {
+            try {
+                const response = await fetch(`${AUTH_API}/me`, {
+                    headers: getAuthHeaders()
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    await showResults('results-quick', { status: 'Authenticated', user: data });
+                    addTestResult('Authentication Check', true, 'User is authenticated');
+                    return true;
+                } else {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+            } catch (error) {
+                await showResults('results-quick', { error: error.message }, true);
+                addTestResult('Authentication Check', false, error.message);
+                return false;
+            }
+        }
+
+        async function listVenues() {
+            try {
+                const response = await fetch(`${API_BASE}/venues`, {
+                    headers: getAuthHeaders()
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    await showResults('results-quick', {
+                        message: 'Venues loaded successfully',
+                        count: data.data?.venues?.length || 0,
+                        venues: data.data?.venues || []
+                    });
+                    addTestResult('List Venues', true, `Found ${data.data?.venues?.length || 0} venues`);
+                    return data.data?.venues || [];
+                } else {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+            } catch (error) {
+                await showResults('results-quick', { error: error.message }, true);
+                addTestResult('List Venues', false, error.message);
+                return [];
+            }
+        }
+
+        async function testValidDeletion() {
+            // First get the list of venues
+            const venues = await listVenues();
+
+            if (venues.length === 0) {
+                await showResults('results-quick', { message: 'No venues available for deletion test' });
+                addTestResult('Valid Deletion Test', false, 'No venues available to test');
+                return;
+            }
+
+            // Use the first venue for testing
+            const testVenue = venues[0];
+            const venueId = testVenue.venueId || testVenue._id || testVenue.id;
+
+            if (!venueId) {
+                await showResults('results-quick', { error: 'No valid venue ID found in first venue' }, true);
+                addTestResult('Valid Deletion Test', false, 'No valid venue ID found');
+                return;
+            }
+
+            // Test deletion
+            await deleteVenueById(venueId, 'results-quick', 'Valid Deletion Test');
+        }
+
+        async function testInvalidDeletion() {
+            // Test with a non-existent venue ID
+            const fakeId = 'nonexistent-venue-id-12345';
+            await deleteVenueById(fakeId, 'results-quick', 'Invalid Deletion Test');
+        }
+
+        async function deleteVenue() {
+            const venueId = document.getElementById('venueId').value.trim();
+
+            if (!venueId) {
+                await showResults('results-manual', { error: 'Please enter a venue ID' }, true);
+                return;
+            }
+
+            await deleteVenueById(venueId, 'results-manual', 'Manual Deletion Test');
+        }
+
+        async function deleteVenueById(venueId, resultElementId, testName) {
+            try {
+                const response = await fetch(`${API_BASE}/venues/${venueId}`, {
+                    method: 'DELETE',
+                    headers: getAuthHeaders()
+                });
+
+                if (response.ok) {
+                    const data = await response.json().catch(() => ({ message: 'Venue deleted successfully' }));
+                    await showResults(resultElementId, {
+                        message: `Venue ${venueId} deleted successfully`,
+                        response: data
+                    });
+                    addTestResult(testName, true, `Venue ${venueId} deleted successfully`);
+                } else {
+                    const errorData = await response.json().catch(() => ({
+                        message: `HTTP ${response.status}: ${response.statusText}`
+                    }));
+                    throw new Error(errorData.message || errorData.error || `HTTP ${response.status}`);
+                }
+            } catch (error) {
+                await showResults(resultElementId, {
+                    error: error.message,
+                    venueId: venueId,
+                    note: 'This error should now be properly handled in the UI with the latest fixes',
+                    backendFixes: 'Backend now supports both venueId and _id fields',
+                    frontendFixes: 'Frontend now uses consistent ID field handling'
+                }, true);
+                addTestResult(testName, false, `Error: ${error.message}`);
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            const summaryList = document.getElementById('test-summary');
+            summaryList.innerHTML = '<li><em>Run tests to see results here</em></li>';
+        });
+    </script>
+</body>
+</html>

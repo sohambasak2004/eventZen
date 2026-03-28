@@ -1,0 +1,1168 @@
+{
+  "info": {
+    "name": "EventZen Venue & Vendor Service",
+    "description": "Complete API collection for EventZen Venue & Vendor Management Service",
+    "version": "1.0.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{jwt_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "{{base_url}}"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health & Info",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/health",
+              "host": ["{{base_url}}"],
+              "path": ["health"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "API Info",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Venues",
+      "item": [
+        {
+          "name": "Create Venue",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.data && response.data.venue) {",
+                  "        pm.environment.set('venue_id', response.data.venue.venueId);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"venueName\": \"Grand Convention Center\",\n  \"description\": \"Large convention center perfect for corporate events and conferences\",\n  \"address\": {\n    \"street\": \"123 Convention Ave\",\n    \"city\": \"New York\",\n    \"state\": \"NY\",\n    \"zipCode\": \"10001\",\n    \"country\": \"USA\"\n  },\n  \"longitude\": -74.0059,\n  \"latitude\": 40.7128,\n  \"capacity\": 1000,\n  \"pricePerDay\": 5000,\n  \"halls\": [\n    {\n      \"hallName\": \"Main Hall\",\n      \"capacity\": 800\n    },\n    {\n      \"hallName\": \"Conference Room A\",\n      \"capacity\": 100\n    }\n  ],\n  \"amenities\": [\"WiFi\", \"Sound System\", \"Projector\", \"Catering Kitchen\"],\n  \"contactInfo\": {\n    \"email\": \"contact@grandconvention.com\",\n    \"phone\": \"+1-555-0123\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/venues",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "venues"]
+            },
+            "description": "Create a new venue (Admin only)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Venues",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/venues?city=New York&capacity=500&page=1&limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "venues"],
+              "query": [
+                {
+                  "key": "city",
+                  "value": "New York"
+                },
+                {
+                  "key": "capacity",
+                  "value": "500"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Get all venues with optional filters (Public)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Venue by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/venues/{{venue_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "venues", "{{venue_id}}"]
+            },
+            "description": "Get specific venue details (Public)"
+          },
+          "response": []
+        },
+        {
+          "name": "Check Venue Availability",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/venues/{{venue_id}}/availability?startDate=2024-04-01&endDate=2024-04-02",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "venues", "{{venue_id}}", "availability"],
+              "query": [
+                {
+                  "key": "startDate",
+                  "value": "2024-04-01"
+                },
+                {
+                  "key": "endDate",
+                  "value": "2024-04-02"
+                }
+              ]
+            },
+            "description": "Check venue availability for specific dates"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Venue Booking",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.data && response.data.booking) {",
+                  "        pm.environment.set('booking_id', response.data.booking.bookingId);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{organizer_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"eventId\": \"event-123\",\n  \"bookingDates\": {\n    \"startDate\": \"2024-04-01T00:00:00Z\",\n    \"endDate\": \"2024-04-01T23:59:59Z\",\n    \"eventStartTime\": \"2024-04-01T18:00:00Z\",\n    \"eventEndTime\": \"2024-04-01T23:00:00Z\"\n  },\n  \"attendeeCount\": {\n    \"expected\": 250\n  },\n  \"requirements\": {\n    \"specialRequests\": [\n      {\n        \"request\": \"Red carpet setup\"\n      }\n    ]\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/venues/{{venue_id}}/book",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "venues", "{{venue_id}}", "book"]
+            },
+            "description": "Create a venue booking (Organizer/Admin)"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Venue",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pricePerDay\": 5500,\n  \"description\": \"Updated: Large convention center perfect for corporate events and conferences with enhanced amenities\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/venues/{{venue_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "venues", "{{venue_id}}"]
+            },
+            "description": "Update venue details (Admin/Owner)"
+          },
+          "response": []
+        },
+        {
+          "name": "Search Venues by Location",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/venues/search/location?longitude=-74.0059&latitude=40.7128&radius=25&capacity=200",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "venues", "search", "location"],
+              "query": [
+                {
+                  "key": "longitude",
+                  "value": "-74.0059"
+                },
+                {
+                  "key": "latitude",
+                  "value": "40.7128"
+                },
+                {
+                  "key": "radius",
+                  "value": "25"
+                },
+                {
+                  "key": "capacity",
+                  "value": "200"
+                }
+              ]
+            },
+            "description": "Search venues by geographic location"
+          },
+          "response": []
+        },
+        {
+          "name": "Search Venues by Text",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/venues/search?q=convention center&capacity=500",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "venues", "search"],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "convention center"
+                },
+                {
+                  "key": "capacity",
+                  "value": "500"
+                }
+              ]
+            },
+            "description": "Search venues by text query"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Venue Bookings",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/venues/{{venue_id}}/bookings?status=confirmed",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "venues", "{{venue_id}}", "bookings"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "confirmed"
+                }
+              ]
+            },
+            "description": "Get all bookings for a venue (Admin only)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Venue Stats",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/venues/{{venue_id}}/stats?startDate=2024-01-01&endDate=2024-12-31",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "venues", "{{venue_id}}", "stats"],
+              "query": [
+                {
+                  "key": "startDate",
+                  "value": "2024-01-01"
+                },
+                {
+                  "key": "endDate",
+                  "value": "2024-12-31"
+                }
+              ]
+            },
+            "description": "Get venue statistics (Admin/Owner)"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Vendors",
+      "item": [
+        {
+          "name": "Create Vendor",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.data && response.data.vendor) {",
+                  "        pm.environment.set('vendor_id', response.data.vendor.vendorId);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vendorName\": \"Elite Catering Co\",\n  \"businessName\": \"Elite Catering Company LLC\",\n  \"serviceType\": \"catering\",\n  \"description\": \"Premium catering services for all types of events\",\n  \"contactInfo\": {\n    \"email\": \"contact@elitecatering.com\",\n    \"phone\": \"+1-555-0456\",\n    \"website\": \"https://elitecatering.com\"\n  },\n  \"address\": {\n    \"street\": \"456 Culinary Ave\",\n    \"city\": \"New York\",\n    \"state\": \"NY\",\n    \"zipCode\": \"10001\",\n    \"country\": \"USA\"\n  },\n  \"packages\": [\n    {\n      \"packageName\": \"Corporate Lunch\",\n      \"description\": \"Complete lunch catering package\",\n      \"basePrice\": 25,\n      \"priceType\": \"per_person\",\n      \"features\": [\"Appetizer\", \"Main Course\", \"Dessert\", \"Beverages\"]\n    },\n    {\n      \"packageName\": \"Wedding Dinner\",\n      \"description\": \"Premium wedding dinner service\",\n      \"basePrice\": 75,\n      \"priceType\": \"per_person\",\n      \"features\": [\"3-Course Meal\", \"Wedding Cake\", \"Bar Service\"]\n    }\n  ],\n  \"longitude\": -74.0094,\n  \"latitude\": 40.7849\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/vendors",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "vendors"]
+            },
+            "description": "Create a new vendor (Admin only)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Vendors",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/vendors?serviceType=catering&city=New York&verified=true&page=1&limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "vendors"],
+              "query": [
+                {
+                  "key": "serviceType",
+                  "value": "catering"
+                },
+                {
+                  "key": "city",
+                  "value": "New York"
+                },
+                {
+                  "key": "verified",
+                  "value": "true"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Get all vendors with filters"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Vendor by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/vendors/{{vendor_id}}?includeReviews=true",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "vendors", "{{vendor_id}}"],
+              "query": [
+                {
+                  "key": "includeReviews",
+                  "value": "true"
+                }
+              ]
+            },
+            "description": "Get specific vendor details"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Vendors by Service Type",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/vendors/service/catering?city=New York&verified=true",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "vendors", "service", "catering"],
+              "query": [
+                {
+                  "key": "city",
+                  "value": "New York"
+                },
+                {
+                  "key": "verified",
+                  "value": "true"
+                }
+              ]
+            },
+            "description": "Get vendors by specific service type"
+          },
+          "response": []
+        },
+        {
+          "name": "Check Vendor Availability",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/vendors/{{vendor_id}}/availability?serviceDate=2024-04-01&startTime=2024-04-01T17:00:00Z&endTime=2024-04-01T23:00:00Z",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "vendors", "{{vendor_id}}", "availability"],
+              "query": [
+                {
+                  "key": "serviceDate",
+                  "value": "2024-04-01"
+                },
+                {
+                  "key": "startTime",
+                  "value": "2024-04-01T17:00:00Z"
+                },
+                {
+                  "key": "endTime",
+                  "value": "2024-04-01T23:00:00Z"
+                }
+              ]
+            },
+            "description": "Check vendor availability for specific date/time"
+          },
+          "response": []
+        },
+        {
+          "name": "Hire Vendor (Create Contract)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.data && response.data.contract) {",
+                  "        pm.environment.set('contract_id', response.data.contract.contractId);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{organizer_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"eventId\": \"event-123\",\n  \"serviceDetails\": {\n    \"serviceType\": \"catering\",\n    \"description\": \"Wedding dinner catering for 100 guests\"\n  },\n  \"schedule\": {\n    \"serviceDate\": \"2024-04-01T00:00:00Z\",\n    \"startTime\": \"2024-04-01T17:00:00Z\",\n    \"endTime\": \"2024-04-01T23:00:00Z\"\n  },\n  \"pricing\": {\n    \"agreedPrice\": 7500\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/vendors/{{vendor_id}}/hire",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "vendors", "{{vendor_id}}", "hire"]
+            },
+            "description": "Hire a vendor (create contract)"
+          },
+          "response": []
+        },
+        {
+          "name": "Add Vendor Review",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{organizer_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"eventId\": \"event-123\",\n  \"rating\": 5,\n  \"comment\": \"Outstanding service! Food was delicious and service was impeccable.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/vendors/{{vendor_id}}/reviews",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "vendors", "{{vendor_id}}", "reviews"]
+            },
+            "description": "Add a review for a vendor"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Vendor",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Updated: Premium catering services for all types of events with 10+ years of experience\",\n  \"serviceCategories\": [\"wedding\", \"corporate\", \"birthday\"]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/vendors/{{vendor_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "vendors", "{{vendor_id}}"]
+            },
+            "description": "Update vendor details (Admin/Owner)"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Vendor Verification",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"isVerified\": true,\n  \"documents\": [\n    {\n      \"type\": \"business_license\",\n      \"url\": \"https://example.com/license.pdf\"\n    },\n    {\n      \"type\": \"insurance\",\n      \"url\": \"https://example.com/insurance.pdf\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/vendors/{{vendor_id}}/verification",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "vendors", "{{vendor_id}}", "verification"]
+            },
+            "description": "Update vendor verification status (Admin only)"
+          },
+          "response": []
+        },
+        {
+          "name": "Search Vendors by Location",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/vendors/search/location?longitude=-74.0094&latitude=40.7849&serviceType=catering&radius=25",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "vendors", "search", "location"],
+              "query": [
+                {
+                  "key": "longitude",
+                  "value": "-74.0094"
+                },
+                {
+                  "key": "latitude",
+                  "value": "40.7849"
+                },
+                {
+                  "key": "serviceType",
+                  "value": "catering"
+                },
+                {
+                  "key": "radius",
+                  "value": "25"
+                }
+              ]
+            },
+            "description": "Search vendors by location and service type"
+          },
+          "response": []
+        },
+        {
+          "name": "Search Vendors by Text",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/vendors/search?q=elite catering&serviceType=catering",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "vendors", "search"],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "elite catering"
+                },
+                {
+                  "key": "serviceType",
+                  "value": "catering"
+                }
+              ]
+            },
+            "description": "Search vendors by text query"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Bookings",
+      "item": [
+        {
+          "name": "Get All Bookings",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/bookings?status=confirmed&page=1&limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "bookings"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "confirmed"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Get user's bookings (or all bookings if Admin)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Booking by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/bookings/{{booking_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "bookings", "{{booking_id}}"]
+            },
+            "description": "Get specific booking details"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Booking Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"confirmed\",\n  \"reason\": \"Payment received and verified\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/bookings/{{booking_id}}/status",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "bookings", "{{booking_id}}", "status"]
+            },
+            "description": "Update booking status (Admin only)"
+          },
+          "response": []
+        },
+        {
+          "name": "Add Payment to Booking",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 2500,\n  \"type\": \"deposit\",\n  \"paymentMethod\": \"credit_card\",\n  \"reference\": \"txn_1234567890\",\n  \"status\": \"completed\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/bookings/{{booking_id}}/payments",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "bookings", "{{booking_id}}", "payments"]
+            },
+            "description": "Add payment to a booking"
+          },
+          "response": []
+        },
+        {
+          "name": "Cancel Booking",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Event cancelled by organizer\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/bookings/{{booking_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "bookings", "{{booking_id}}"]
+            },
+            "description": "Cancel a booking"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Booking Statistics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/bookings/stats?startDate=2024-01-01&endDate=2024-12-31",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "bookings", "stats"],
+              "query": [
+                {
+                  "key": "startDate",
+                  "value": "2024-01-01"
+                },
+                {
+                  "key": "endDate",
+                  "value": "2024-12-31"
+                }
+              ]
+            },
+            "description": "Get booking statistics (Admin only)"
+          },
+          "response": []
+        },
+        {
+          "name": "Check Booking Conflicts",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/bookings/conflicts?venueId={{venue_id}}&startDate=2024-04-01&endDate=2024-04-02",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "bookings", "conflicts"],
+              "query": [
+                {
+                  "key": "venueId",
+                  "value": "{{venue_id}}"
+                },
+                {
+                  "key": "startDate",
+                  "value": "2024-04-01"
+                },
+                {
+                  "key": "endDate",
+                  "value": "2024-04-02"
+                }
+              ]
+            },
+            "description": "Check for booking conflicts (Admin only)"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Contracts",
+      "item": [
+        {
+          "name": "Get All Contracts",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/contracts?status=signed&page=1&limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "contracts"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "signed"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Get user's contracts (or all contracts if Admin)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Contract by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/contracts/{{contract_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "contracts", "{{contract_id}}"]
+            },
+            "description": "Get specific contract details"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Contract Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"signed\",\n  \"notes\": \"Contract reviewed and approved by both parties\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/contracts/{{contract_id}}/status",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "contracts", "{{contract_id}}", "status"]
+            },
+            "description": "Update contract status (Admin only)"
+          },
+          "response": []
+        },
+        {
+          "name": "Add Payment to Contract",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 3750,\n  \"type\": \"advance\",\n  \"paymentMethod\": \"bank_transfer\",\n  \"reference\": \"contract_advance_001\",\n  \"status\": \"completed\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/contracts/{{contract_id}}/payments",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "contracts", "{{contract_id}}", "payments"]
+            },
+            "description": "Add payment to a contract"
+          },
+          "response": []
+        },
+        {
+          "name": "Add Performance Rating",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"qualityRating\": 5,\n  \"timelinessRating\": 4,\n  \"professionalismRating\": 5,\n  \"feedback\": \"Excellent service throughout the event. Food quality was outstanding and staff was very professional.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/contracts/{{contract_id}}/rating",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "contracts", "{{contract_id}}", "rating"]
+            },
+            "description": "Add performance rating to a completed contract"
+          },
+          "response": []
+        },
+        {
+          "name": "Cancel Contract",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Event cancelled due to unforeseen circumstances\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/contracts/{{contract_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "contracts", "{{contract_id}}"]
+            },
+            "description": "Cancel a contract"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Contract Statistics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/contracts/stats?startDate=2024-01-01&endDate=2024-12-31",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "contracts", "stats"],
+              "query": [
+                {
+                  "key": "startDate",
+                  "value": "2024-01-01"
+                },
+                {
+                  "key": "endDate",
+                  "value": "2024-12-31"
+                }
+              ]
+            },
+            "description": "Get contract statistics (Admin only)"
+          },
+          "response": []
+        },
+        {
+          "name": "Check Schedule Conflicts",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/contracts/conflicts?vendorId={{vendor_id}}&serviceDate=2024-04-01&startTime=2024-04-01T17:00:00Z&endTime=2024-04-01T23:00:00Z",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "contracts", "conflicts"],
+              "query": [
+                {
+                  "key": "vendorId",
+                  "value": "{{vendor_id}}"
+                },
+                {
+                  "key": "serviceDate",
+                  "value": "2024-04-01"
+                },
+                {
+                  "key": "startTime",
+                  "value": "2024-04-01T17:00:00Z"
+                },
+                {
+                  "key": "endTime",
+                  "value": "2024-04-01T23:00:00Z"
+                }
+              ]
+            },
+            "description": "Check for schedule conflicts (Admin only)"
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

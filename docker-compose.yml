@@ -1,0 +1,227 @@
+services:
+  mongo:
+    image: mongo:7.0
+    container_name: eventzen-mongo
+    restart: unless-stopped
+    attach: false
+    command: ["mongod", "--bind_ip_all", "--quiet"]
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+  mysql:
+    image: mysql:8.4
+    container_name: eventzen-mysql
+    restart: unless-stopped
+    attach: false
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: eventzen_auth
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-prootpassword"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  auth-service:
+    build:
+      context: ./backend/services/auth-service
+    container_name: eventzen-auth-service
+    restart: unless-stopped
+    attach: false
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    environment:
+      SERVER_PORT: 8081
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: eventzen_auth
+      DB_USER: root
+      DB_PASSWORD: rootpassword
+      FRONTEND_URL: http://localhost:5173
+      ADMIN_EMAIL: admin@eventzen.com
+      ADMIN_PASSWORD: Admin@1234
+    ports:
+      - "8081:8081"
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z 127.0.0.1 8081"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  event-service:
+    build:
+      context: ./backend/services/event-service
+    container_name: eventzen-event-service
+    restart: unless-stopped
+    attach: false
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    environment:
+      PORT: 3002
+      NODE_ENV: production
+      MONGODB_URI: mongodb://mongo:27017/eventzen_events
+      MONGODB_TEST_URI: mongodb://mongo:27017/eventzen_events_test
+      JWT_PUBLIC_KEY_PATH: /app/keys/public.pem
+      ALLOWED_ORIGINS: http://localhost:5173,http://localhost:4173
+      VENUE_VENDOR_SERVICE_URL: http://venue-vendor-service:3001/api/v1
+      BOOKING_SERVICE_URL: http://booking-service:8082/api/v1
+    ports:
+      - "3002:3002"
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://127.0.0.1:3002/health || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    volumes:
+      - ./backend/services/auth-service/public.pem:/app/keys/public.pem:ro
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+  venue-vendor-service:
+    build:
+      context: ./backend/services/venue-vendor-service
+    container_name: eventzen-venue-vendor-service
+    restart: unless-stopped
+    attach: false
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    environment:
+      PORT: 3001
+      NODE_ENV: production
+      MONGODB_URI: mongodb://mongo:27017/eventzen_venue_vendor
+      MONGODB_TEST_URI: mongodb://mongo:27017/eventzen_venue_vendor_test
+      JWT_PUBLIC_KEY_PATH: /app/keys/public.pem
+      ALLOWED_ORIGINS: http://localhost:5173,http://localhost:4173
+      AUTH_SERVICE_URL: http://auth-service:8081
+      EVENT_SERVICE_URL: http://event-service:3002
+      NOTIFICATION_SERVICE_URL: http://notification-service:3003
+    ports:
+      - "3001:3001"
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://127.0.0.1:3001/health || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    volumes:
+      - ./backend/services/auth-service/public.pem:/app/keys/public.pem:ro
+    depends_on:
+      mongo:
+        condition: service_healthy
+      auth-service:
+        condition: service_healthy
+
+  booking-service:
+    build:
+      context: ./backend/services/booking-service
+    container_name: eventzen-booking-service
+    restart: unless-stopped
+    attach: false
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    environment:
+      ASPNETCORE_URLS: http://0.0.0.0:8082
+      BookingDatabase__ConnectionString: mongodb://mongo:27017
+      BookingDatabase__DatabaseName: eventzen_booking
+      ServiceEndpoints__AuthServiceBaseUrl: http://auth-service:8081/api/v1/auth
+      ServiceEndpoints__EventServiceBaseUrl: http://event-service:3002/api/v1
+      ServiceEndpoints__FrontendBaseUrl: http://localhost:5173
+      Jwt__PublicKeyPath: /app/keys/public.pem
+      Cors__AllowedOrigins__0: http://localhost:5173
+      Cors__AllowedOrigins__1: http://localhost:4173
+    ports:
+      - "8082:8082"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8082/health >/dev/null || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    volumes:
+      - ./backend/services/auth-service/public.pem:/app/keys/public.pem:ro
+    depends_on:
+      mongo:
+        condition: service_healthy
+      auth-service:
+        condition: service_healthy
+      event-service:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_AUTH_SERVICE_URL: http://localhost:8081/api/v1/auth
+        VITE_VENUE_VENDOR_SERVICE_URL: http://localhost:3001/api/v1
+        VITE_EVENT_SERVICE_URL: http://localhost:3002/api/v1
+        VITE_BOOKING_SERVICE_URL: http://localhost:8082/api/v1
+    container_name: eventzen-frontend
+    restart: unless-stopped
+    attach: false
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    ports:
+      - "5173:80"
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://127.0.0.1/health || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+      start_period: 3s
+    depends_on:
+      auth-service:
+        condition: service_healthy
+      event-service:
+        condition: service_healthy
+      venue-vendor-service:
+        condition: service_healthy
+      booking-service:
+        condition: service_healthy
+
+volumes:
+  mongo_data:
+  mysql_data:

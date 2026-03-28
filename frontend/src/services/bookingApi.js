@@ -1,4 +1,5 @@
-const BOOKING_API_BASE = "http://localhost:8082/api/v1";
+const BOOKING_API_BASE =
+  import.meta.env.VITE_BOOKING_SERVICE_URL || "http://localhost:8082/api/v1";
 const STORAGE_KEYS = {
   TOKEN: "ems_token",
   BOOKING_CACHE: "eventzen_paid_bookings",

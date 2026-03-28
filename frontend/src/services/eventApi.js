@@ -1,4 +1,7 @@
-const EVENT_API_BASE = "http://localhost:3002/api/v1";
+const EVENT_API_BASE =
+  import.meta.env.VITE_EVENT_SERVICE_URL || "http://localhost:3002/api/v1";
+const AUTH_API_BASE =
+  import.meta.env.VITE_AUTH_SERVICE_URL || "http://localhost:8081/api/v1/auth";
 
 const STORAGE_KEYS = {
   TOKEN: "ems_token",
@@ -38,7 +41,7 @@ const storeAuthenticatedUser = (data) => {
 const refreshAccessToken = async () => {
   if (!refreshPromise) {
     refreshPromise = (async () => {
-      const response = await fetch("http://localhost:8081/api/v1/auth/refresh", {
+      const response = await fetch(`${AUTH_API_BASE}/refresh`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

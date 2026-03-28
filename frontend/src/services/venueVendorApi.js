@@ -1,7 +1,8 @@
-// API Configuration
 const API_CONFIG = {
-  AUTH_SERVICE: "http://localhost:8081/api/v1/auth",
-  VENUE_VENDOR_SERVICE: "http://localhost:3001/api/v1",
+  AUTH_SERVICE:
+    import.meta.env.VITE_AUTH_SERVICE_URL || "http://localhost:8081/api/v1/auth",
+  VENUE_VENDOR_SERVICE:
+    import.meta.env.VITE_VENUE_VENDOR_SERVICE_URL || "http://localhost:3001/api/v1",
 };
 
 const STORAGE_KEYS = {

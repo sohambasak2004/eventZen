@@ -219,7 +219,12 @@ function BookingCheckout() {
                   </div>
                   <div>
                     <span>Reference</span>
-                    <strong>{session?.paymentWindow?.paymentReference}</strong>
+                    <strong
+                      className="booking-reference-value"
+                      title={session?.paymentWindow?.paymentReference}
+                    >
+                      {session?.paymentWindow?.paymentReference}
+                    </strong>
                   </div>
                   <div>
                     <span>Expires At</span>

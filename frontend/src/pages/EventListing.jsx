@@ -168,7 +168,7 @@ function EventListing() {
                       {event.description ||
                         "Join us for an unforgettable experience filled with inspiration, networking, and celebration."}
                     </p>
-                    <p className="event-card-description">
+                    <p className="event-card-description event-card-meta">
                       {event.availableVenueName || event.location}
                       {event.availableVendorName
                         ? ` - Vendor: ${event.availableVendorName}`
@@ -188,7 +188,7 @@ function EventListing() {
                       </div>
                       <Link
                         to={`/events/${event.id}`}
-                        className="btn btn-sm btn-outline-primary"
+                        className="btn btn-sm btn-outline-primary event-card-action"
                       >
                         View Details
                       </Link>
